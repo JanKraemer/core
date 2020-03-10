@@ -73,8 +73,7 @@ if ( !class_exists( "pdh_r_raid_groups_members" ) ){
 					// if there is no mainchar, use the first char and unset the rest
 					}else{
 						$this->raid_groups_charselection[$mainchar_id] = 'attendance';
-						$attending_char		= $this->pdh->get('calendar_raids_attendees', 'twinks_with_highest_attendance', array($memberid));
-						$other_chars		= $this->pdh->get('member', 'other_members', array($attending_char));
+						$other_chars		= $this->pdh->get('member', 'other_members', array($memberid));
 						foreach($other_chars as $othercharIds){
 							unset($tmp_raid_groups_members[$othercharIds]);
 						}

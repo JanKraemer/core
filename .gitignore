@@ -110,3 +110,4 @@ templates/eqdkp_wow
 # IDEA
 ######################
 .idea/
+*.iml
