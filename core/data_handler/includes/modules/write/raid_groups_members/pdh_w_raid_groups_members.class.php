@@ -38,6 +38,8 @@ if(!class_exists('pdh_w_raid_groups_members')) {
 				return false;
 			}
 
+			$this->add_member_to_raid_events($member_id, $group_id);
+
 			$this->pdh->enqueue_hook('raid_groups_update');
 			return true;
 		}
@@ -144,6 +146,7 @@ if(!class_exists('pdh_w_raid_groups_members')) {
 		public function delete_members_from_group($member_array, $group_id) {
 			if (is_array($member_array)) {
 				$objQuery = $this->db->prepare("DELETE FROM __groups_raid_members WHERE group_id =? AND member_id :in")->in($member_array)->execute($group_id);
+				$this->delete_member_from_raid_events($member_array);
 				$this->pdh->enqueue_hook('raid_groups_update');
 			} else {
 				return false;
@@ -155,5 +158,39 @@ if(!class_exists('pdh_w_raid_groups_members')) {
 			$this->pdh->enqueue_hook('raid_groups_update');
 			return true;
 		}
+
+		private function add_member_to_raid_events($member_id, $group_id) {
+            /*
+             * TODO lesen der Events die in Zukunft sind anhand der Groupid
+             * Auslesen der benötigten Values und call auf calendar_raids_attendees put update_status($eventid, $memberid, $memberrole='', $signupstatus='', $raidgroup=0, $signed_memberid=0, $note='', $signedbyadmin=0)
+             */
+            $objQuery = $this->db->prepare("SELECT * FROM __calendar_events WHERE timestamp_start >= now()");
+            if($objQuery){
+                while($row = $objQuery->fetchAssoc()){
+                    $raidid = (int)$row['id'];
+
+                    $userid			= $this->pdh->get('user', 'userid', array($member_id));
+                    $away_mode		= $this->pdh->get('calendar_raids_attendees', 'user_awaymode', array($userid, $raidid));
+                    $defaultrole	= $this->pdh->get('member', 'defaultrole', array($member_id));
+                    $signupstatus	= ($away_mode) ? 2 : 1;
+                    $signupnote		= $this->pdh->get('$raid_groups_members', 'charSelectionMethod', array($member_id));
+                    $signupnote_txt	= ($signupnote) ? $this->user_lang('raidevent_raid_note_'.$signupnote) : '';
+
+                    $this->pdh->put('calendar_raids_attendees', 'update_status', array($raidid, $member_id, (($defaultrole) ? $defaultrole : 0), $signupstatus, $group_id, 0, $signupnote_txt));
+                }
+            }
+        }
+
+        private function delete_member_from_raid_events($memberids) {
+            $memberids = (is_array($memberids)) ? $memberids : array($memberids);
+            $objQuery = $this->db->prepare("SELECT * FROM __calendar_events WHERE timestamp_start >= now()");
+            if($objQuery) {
+                while ($row = $objQuery->fetchAssoc()) {
+                    $calenderEventId = $row['calendar_id'];
+                    $objQuery = $this->db->prepare("DELETE FROM __calendar_raid_attendees WHERE calendar_events_id = ? member_id :in")->in($memberids)->execute($calenderEventId);
+                }
+            }
+            $this->pdh->enqueue_hook('calendar_raid_attendees_update');
+        }
 	}
 }
