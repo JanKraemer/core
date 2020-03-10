@@ -105,3 +105,10 @@ templates/eqdkp_bf_v
 templates/eqdkp_bf
 templates/eqdkp_wow
 .vscode
+
+######################
+# IDEA
+######################
+**/*.iml
+.idea/*
+!.idea/runConfigurations/
