@@ -1,0 +1,8 @@
+# Default ignored files
+######################
+# IDEA
+######################
+**/*.iml
+.idea/*
+!.idea/runConfigurations/
+/workspace.xml
