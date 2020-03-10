@@ -160,11 +160,7 @@ if(!class_exists('pdh_w_raid_groups_members')) {
 		}
 
 		private function add_member_to_raid_events($member_id, $group_id) {
-            /*
-             * TODO lesen der Events die in Zukunft sind anhand der Groupid
-             * Auslesen der benötigten Values und call auf calendar_raids_attendees put update_status($eventid, $memberid, $memberrole='', $signupstatus='', $raidgroup=0, $signed_memberid=0, $note='', $signedbyadmin=0)
-             */
-            $objQuery = $this->db->prepare("SELECT * FROM __calendar_events WHERE timestamp_start >= now()");
+            $objQuery = $this->db->query("SELECT * FROM __calendar_events WHERE timestamp_start >= UNIX_TIMESTAMP()");
             if($objQuery){
                 while($row = $objQuery->fetchAssoc()){
                     $raidid = (int)$row['id'];
@@ -183,11 +179,11 @@ if(!class_exists('pdh_w_raid_groups_members')) {
 
         private function delete_member_from_raid_events($memberids) {
             $memberids = (is_array($memberids)) ? $memberids : array($memberids);
-            $objQuery = $this->db->prepare("SELECT * FROM __calendar_events WHERE timestamp_start >= now()");
+            $objQuery = $this->db->query("SELECT * FROM __calendar_events WHERE timestamp_start >= UNIX_TIMESTAMP()");
             if($objQuery) {
                 while ($row = $objQuery->fetchAssoc()) {
-                    $calenderEventId = $row['calendar_id'];
-                    $objQuery = $this->db->prepare("DELETE FROM __calendar_raid_attendees WHERE calendar_events_id = ? member_id :in")->in($memberids)->execute($calenderEventId);
+                    $calenderEventId = $row['id'];
+                    $query = $this->db->prepare("DELETE FROM __calendar_raid_attendees WHERE calendar_events_id=? AND member_id :in")->in($memberids)->execute($calenderEventId);
                 }
             }
             $this->pdh->enqueue_hook('calendar_raid_attendees_update');
