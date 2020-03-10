@@ -2,7 +2,4 @@
 ######################
 # IDEA
 ######################
-**/*.iml
-/idea/*
-!.idea/runConfigurations/
-/workspace.xml
+/**
