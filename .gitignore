@@ -109,6 +109,4 @@ templates/eqdkp_wow
 ######################
 # IDEA
 ######################
-**/*.iml
-.idea/*
-!.idea/runConfigurations/
+.idea/
