@@ -166,8 +166,8 @@ if(!class_exists('pdh_w_raid_groups_members')) {
                     $raidid = (int)$row['id'];
 
                     // Nur wenn die RaidId (EventId) deiner group_id angehört hinzufügen.
-                    // TODO prüfen des Raidleiters zu dem Event, ggf join mit members und den Leader holen.
-                    if($raidid){
+                    $extension = unserialize($row['extension']);
+                    if($raidid != $extension['invited_raidgroup']){
                         continue;
                     }
 
