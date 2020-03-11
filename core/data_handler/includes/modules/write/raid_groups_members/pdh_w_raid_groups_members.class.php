@@ -162,23 +162,23 @@ if(!class_exists('pdh_w_raid_groups_members')) {
 		private function add_member_to_raid_events($member_id, $group_id) {
             $objQuery = $this->db->query("SELECT * FROM __calendar_events WHERE timestamp_start >= UNIX_TIMESTAMP()");
             if($objQuery){
-                while($row = $objQuery->fetchAssoc()){
+                while($row = $objQuery->fetchAssoc()) {
                     $raidid = (int)$row['id'];
 
                     // Nur wenn die RaidId (EventId) deiner group_id angehört hinzufügen.
                     $extension = unserialize($row['extension']);
-                    if($raidid != $extension['invited_raidgroup']){
-                        continue;
+                    if (count($extension['autosignin_group']) > 0 && in_array($group_id, $extension['autosignin_group'])) {
+
+                        $userid = $this->pdh->get('user', 'userid', array($member_id));
+                        $away_mode = $this->pdh->get('calendar_raids_attendees', 'user_awaymode', array($userid, $raidid));
+                        $defaultrole = $this->pdh->get('member', 'defaultrole', array($member_id));
+                        $signupstatus = ($away_mode) ? 2 : 1;
+                        $signupnote = $this->pdh->get('$raid_groups_members', 'charSelectionMethod', array($member_id));
+                        $signupnote_txt = ($signupnote) ? $this->user_lang('raidevent_raid_note_' . $signupnote) : '';
+
+                        $this->pdh->put('calendar_raids_attendees', 'update_status', array($raidid, $member_id, (($defaultrole) ? $defaultrole : 0), $signupstatus, $group_id, 0, $signupnote_txt));
+
                     }
-
-                    $userid			= $this->pdh->get('user', 'userid', array($member_id));
-                    $away_mode		= $this->pdh->get('calendar_raids_attendees', 'user_awaymode', array($userid, $raidid));
-                    $defaultrole	= $this->pdh->get('member', 'defaultrole', array($member_id));
-                    $signupstatus	= ($away_mode) ? 2 : 1;
-                    $signupnote		= $this->pdh->get('$raid_groups_members', 'charSelectionMethod', array($member_id));
-                    $signupnote_txt	= ($signupnote) ? $this->user_lang('raidevent_raid_note_'.$signupnote) : '';
-
-                    $this->pdh->put('calendar_raids_attendees', 'update_status', array($raidid, $member_id, (($defaultrole) ? $defaultrole : 0), $signupstatus, $group_id, 0, $signupnote_txt));
                 }
             }
         }
