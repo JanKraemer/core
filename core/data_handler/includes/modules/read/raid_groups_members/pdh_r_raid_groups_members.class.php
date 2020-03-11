@@ -44,7 +44,6 @@ if ( !class_exists( "pdh_r_raid_groups_members" ) ){
 		public function init(){
 			$this->raid_groups_members = array();
 
-			//TODO Checken was diese Query zurückgibt.
 			$objQuery = $this->db->query("SELECT gm.* FROM __groups_raid_members gm, __members m WHERE m.member_id = gm.member_id ORDER BY m.member_name ASC");
 			if($objQuery){
 				while($row = $objQuery->fetchAssoc()){

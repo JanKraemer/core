@@ -146,7 +146,7 @@ if(!class_exists('pdh_w_raid_groups_members')) {
 		public function delete_members_from_group($member_array, $group_id) {
 			if (is_array($member_array)) {
 				$objQuery = $this->db->prepare("DELETE FROM __groups_raid_members WHERE group_id =? AND member_id :in")->in($member_array)->execute($group_id);
-				$this->delete_member_from_raid_events($member_array);
+				$this->delete_member_from_raid_events($member_array, $group_id);
 				$this->pdh->enqueue_hook('raid_groups_update');
 			} else {
 				return false;
@@ -165,6 +165,12 @@ if(!class_exists('pdh_w_raid_groups_members')) {
                 while($row = $objQuery->fetchAssoc()){
                     $raidid = (int)$row['id'];
 
+                    // Nur wenn die RaidId (EventId) deiner group_id angehört hinzufügen.
+                    // TODO prüfen des Raidleiters zu dem Event, ggf join mit members und den Leader holen.
+                    if($raidid){
+                        continue;
+                    }
+
                     $userid			= $this->pdh->get('user', 'userid', array($member_id));
                     $away_mode		= $this->pdh->get('calendar_raids_attendees', 'user_awaymode', array($userid, $raidid));
                     $defaultrole	= $this->pdh->get('member', 'defaultrole', array($member_id));
@@ -177,13 +183,13 @@ if(!class_exists('pdh_w_raid_groups_members')) {
             }
         }
 
-        private function delete_member_from_raid_events($memberids) {
+        private function delete_member_from_raid_events($memberids, $groupId) {
             $memberids = (is_array($memberids)) ? $memberids : array($memberids);
             $objQuery = $this->db->query("SELECT * FROM __calendar_events WHERE timestamp_start >= UNIX_TIMESTAMP()");
             if($objQuery) {
                 while ($row = $objQuery->fetchAssoc()) {
                     $calenderEventId = $row['id'];
-                    $query = $this->db->prepare("DELETE FROM __calendar_raid_attendees WHERE calendar_events_id=? AND member_id :in")->in($memberids)->execute($calenderEventId);
+                    $query = $this->db->prepare("DELETE FROM __calendar_raid_attendees WHERE calendar_events_id=? AND raidgroup=? AND member_id :in")->in($memberids)->execute($calenderEventId, $groupId);
                 }
             }
             $this->pdh->enqueue_hook('calendar_raid_attendees_update');
